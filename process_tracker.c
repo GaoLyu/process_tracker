@@ -3,7 +3,8 @@
 
 #include <sys/types.h>
 #include <dirent.h>
-
+#include <sys/stat.h>
+#include <errno.h>
 
 #include<sys/utsname.h>
 #include<sys/sysinfo.h>
@@ -23,24 +24,6 @@ void repeat(char *string, int num){
    }
 }
 
-void getFD(int pid){
-   char location[20]="/proc/";
-   char *mypid=NULL;
-   printf("test2");
-   sprintf(mypid, "%d", pid);
-   printf("%s\n",mypid);
-   printf("testtest1\n");
-   strcat(location,mypid);
-   strcat(location,"/fd");
-   DIR* dirp=opendir(location);
-   struct dirent* dp;
-   while ((dp = readdir(dirp)) != NULL) {
-     printf("fd: %s\n",dp->d_name);
-     
-  }
-  closedir(dirp);
-}
-
 
 bool isnumber(char string[]){
    for(int i=0;i<strlen(string);i++){
@@ -50,6 +33,86 @@ bool isnumber(char string[]){
    }
    return true;
 }
+
+
+void getFD(char pid[]){
+   char location[20];
+   char path[130];
+   char filename[150];
+   strcpy(location, "/proc/");
+   strcat(location,pid);
+   strcat(location,"/fd");
+   DIR* dirp1=opendir(location);
+   if (dirp1 == NULL) {
+      perror("opendir");
+      if (errno == EACCES) {
+         fprintf(stderr, "Skipping this pid\n");
+         return;
+      }
+      exit(1);
+   }
+   struct dirent* dp;
+   while ((dp = readdir(dirp1)) != NULL) {
+      if(isnumber(dp->d_name)){
+         printf("pid: %s   ",pid);
+         printf("fd: %s  ",dp->d_name);
+         printf("inode: %lu   ",dp->d_ino);
+         //char path[130];
+         strcpy(path,location);
+         strcat(path,"/");
+         strcat(path,dp->d_name);
+         // char filename[150];
+         // struct stat st;
+         // stat(path,&st);
+         // struct stat fst;
+         // fstat(atoi(dp->d_name),&fst);
+
+         // printf("inode: from stat()%lu, from fstat() %lu\n",st.st_ino,
+         //    fst.st_ino);
+         // printf("uid: from stat() %u, from fstat() %u\n",st.st_uid,
+         //  fst.st_uid);         
+         readlink(path,filename,150);
+         printf("filename: %s\n", filename);
+         memset(path, 0, 130);
+         memset(filename, 0, 150);
+      }
+  }
+  closedir(dirp1);
+
+}
+
+void getprocesses(){
+   DIR* dirp=opendir("/proc");
+   if (dirp == NULL) {
+      perror("opendir");
+      exit(1);
+   }
+   struct dirent* dp;
+   uid_t uid=getuid();
+   char path[120];
+   int i=0;
+   struct stat st;
+   while ((dp = readdir(dirp)) != NULL) {
+      printf("testtest %d\n",i);
+      if(isnumber(dp->d_name) && dp->d_type == DT_DIR){
+         strcpy(path,"/proc/");
+         strcat(path,dp->d_name);
+         stat(path,&st);
+         if(st.st_uid==uid){
+            getFD(dp->d_name);
+         }
+         memset(path, 0, 120);
+         
+         printf(">>>>i");
+         i++;
+      }
+   }
+   closedir(dirp);
+
+}
+
+
+
 
 void get_command(int argc, char **argv, struct option long_options[], int* pid){
    int c;
@@ -64,7 +127,6 @@ void get_command(int argc, char **argv, struct option long_options[], int* pid){
             }
       }
    }
-   
    while(optind<argc){
       if(isnumber(argv[optind])){
          *pid=atoi(argv[optind]);
@@ -90,8 +152,7 @@ int main(int argc, char **argv){
       {0,0,0,0}
    };
    get_command(argc,argv,long_options,&pid);
-   printf("testtestgetcommand\n");
-   getFD(pid);
+   getprocesses();
    
    return 0;
 }
