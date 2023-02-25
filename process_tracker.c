@@ -1,25 +1,18 @@
 #include<stdio.h>
 #include<stdlib.h>
-
 #include <sys/types.h>
 #include <dirent.h>
 #include <sys/stat.h>
 #include <errno.h>
-
-#include<sys/utsname.h>
-#include<sys/sysinfo.h>
-#include <utmp.h>
 #include <unistd.h>
-#include <sys/resource.h>
 #include <string.h>
 #include <getopt.h>
 #include <stdbool.h>
 #include <ctype.h>
 
-
 struct file{
    char fd[20];
-   char filename[1024];
+   char filename[512];
    int inode;
    struct file* nextfile;
 };
@@ -49,15 +42,6 @@ struct process* createprocess(char pid[], struct file* file, int i){
    return process;
 }
 
-
-
-// void repeat(char *string, int num){
-//    for(int i=0;i<num;i++){
-//       printf("%s",string);
-//    }
-// }
-
-
 bool isnumber(char string[]){
    for(int i=0;i<strlen(string);i++){
       if(!(isdigit(string[i]))){
@@ -67,93 +51,12 @@ bool isnumber(char string[]){
    return true;
 }
 
-
-int getone(char pid[], int i, int f){
-   char location[100];
-   char path[130];
-   char filename[1024];
-   strcpy(location, "/proc/");
-   strcat(location,pid);
-   strcat(location,"/fd");
-   DIR* dirp1=opendir(location);
-   if (dirp1 == NULL) {
-      return i;
-   }
-   struct dirent* dp;
-   while ((dp = readdir(dirp1)) != NULL) {
-      if(isnumber(dp->d_name)){
-         strcpy(path,location);
-         strcat(path,"/");
-         strcat(path,dp->d_name);     
-         readlink(path,filename,1024);
-         if(f==0){
-            //per-process
-            printf("%d\t%s\t%s\n",i,pid,dp->d_name);
-         }
-         else if(f==1){
-            //systemWide
-            printf("%d\t%s\t%s\t%s\n",i,pid,dp->d_name,filename);
-         }
-         else if(f==2){
-            //Vnodes
-            printf("%d\t%lu\n",i,dp->d_ino);
-         }
-         else if(f==3){
-            //composite
-            printf("%d\t%s\t%s\t%lu\t%s\n",i,pid,dp->d_name,dp->d_ino,filename);
-         }
-         memset(path, 0, 130);
-         memset(filename, 0, 1024);
-         i++;
-      }
-  }
-  closedir(dirp1);
-  return i;
-}
-
-void composite(){
-   
-   DIR* dirp=opendir("/proc");
-   if (dirp == NULL) {
-      perror("opendir");
-      exit(1);
-   }
-   struct dirent* dp;
-   uid_t uid=getuid();
-   char path[130];
-   int i=0;
-   struct stat st;
-   while ((dp = readdir(dirp)) != NULL) {
-      //printf("testtest %d\n",i);
-      if(isnumber(dp->d_name) && dp->d_type == DT_DIR){
-         strcpy(path,"/proc/");
-         strcat(path,dp->d_name);
-         stat(path,&st);
-         if(st.st_uid==uid){
-            i=getone(dp->d_name,i,3);
-         }
-         memset(path, 0, 130);
-         
-         //printf(">>>>i");
-         //i++;
-      }
-   }
-   closedir(dirp);
-}
-
-
-void perprocess(){
-
-}
-
-
-
-
 int getfd(char pid[], struct file **f){
    int i=0;
    char location[100];
    char path[130];
-   char filename[1024];
+   char filename[512];
+   struct stat st;
    strcpy(location, "/proc/");
    strcat(location,pid);
    strcat(location,"/fd");
@@ -167,18 +70,20 @@ int getfd(char pid[], struct file **f){
       if(isnumber(dp->d_name)){
          strcpy(path,location);
          strcat(path,"/");
-         strcat(path,dp->d_name);     
-         readlink(path,filename,1024);
+         strcat(path,dp->d_name);  
+         stat(path,&st);
+
+         readlink(path,filename,512);
          if(root==NULL){
-            root=createfile(dp->d_name,filename,dp->d_ino);
+            root=createfile(dp->d_name,filename,st.st_ino);
             *f=root;
          }
          else{
-            root->nextfile=createfile(dp->d_name,filename,dp->d_ino);
+            root->nextfile=createfile(dp->d_name,filename,st.st_ino);
             root=root->nextfile;
          }
          memset(path, 0, 130);
-         memset(filename, 0, 1024);
+         memset(filename, 0, 512);
          i++;
       }
   }
@@ -221,10 +126,10 @@ void getallpid(struct process** p){
    closedir(dirp);
 }
 
-
 void printone(struct process* p, int n, char pid[]){
    struct process* root=p;
    struct file* f=NULL;
+   char string[1024];
    FILE *fp;
    int i=0;
    if(n==0){
@@ -239,20 +144,23 @@ void printone(struct process* p, int n, char pid[]){
    else if(n==3){
       printf("\tPID\tFD\tInode\tFilename\n");
    }
-   else if(n==4){
-      fp = fopen ("compositeTable.txt", "w");
-      fprintf(fp, "\tPID\tFD\tInode\tFilename\n
-         \t==============================================\n");
-   }
-   else if(n==5){
-      fp = fopen ("compositeTable.txt", "wb");
-      fprintf(fp, "\tPID\tFD\tInode\tFilename\n
-         \t==============================================\n");
+   else if(n==4 || n==5){
+      if(n==4){
+         fp = fopen ("compositeTable.txt", "w");
+      }
+      else{
+         fp = fopen ("compositeTable.bin", "wb");
+      }
+      strcpy(string,"\tPID\tFD\tInode\tFilename\n\t==============================================\n");
+      fwrite(string,sizeof(char),strlen(string),fp);
+      memset(string, 0, 1024);   
    }
    else{
       return;
    }
-   printf("\t==============================================\n");
+   if(n!=4 && n!=5){
+      printf("\t==============================================\n");
+   }
    while(root!=NULL){
       if(strcmp(pid,"")!=0){
          if(strcmp(root->pid,pid)!=0){
@@ -273,15 +181,17 @@ void printone(struct process* p, int n, char pid[]){
          else if(n==3){
             printf("%d\t%s\t%s\t%u\t%s\n",i,root->pid,f->fd,f->inode,f->filename);
          }
-         else if(n==4){
-            fprintf(fp,"%d\t%s\t%s\t%u\t%s\n",i,root->pid,f->fd,f->inode,f->filename);
+         else if(n==4||n==5){
+            sprintf(string,"%d\t%s\t%s\t%u\t%s\n",i,root->pid,f->fd,f->inode,f->filename);
+            fwrite(string,sizeof(char),strlen(string),fp);
+            memset(string, 0, 1024);
          }
          f=f->nextfile;
          i++;
       }
       root=root->nextpid;
    }
-   if(n==4){
+   if(n==4||n==5){
       fclose(fp);
    }
 }
@@ -304,8 +214,6 @@ void printthreshold(struct process* p,int threshold){
    printf("\n");
 }
 
-
-
 void printall(struct process* p,char pid[],
    int process_flag,int system_flag,int vnodes_flag,
    int composite_flag,int txt_flag, int bin_flag, int threshold){
@@ -322,9 +230,6 @@ void printall(struct process* p,char pid[],
       printthreshold(p,threshold);
    }
 }
-
-
-
 
 void get_command(int argc, char **argv, struct option long_options[], char pid[]){
    int c;
@@ -348,8 +253,6 @@ void get_command(int argc, char **argv, struct option long_options[], char pid[]
    }
 }
 
-
-
 int main(int argc, char **argv){
    int process_flag=-1;
    int system_flag=-1;
@@ -369,11 +272,9 @@ int main(int argc, char **argv){
       {"output_binary",0,&bin_flag,5}, 
       {0,0,0,0}
    };
-
    get_command(argc,argv,long_options,pid);
    struct process* p =NULL;
    getallpid(&p);
    printall(p,pid,process_flag,system_flag,vnodes_flag,composite_flag,txt_flag,bin_flag,threshold);
-   
    return 0;
 }
