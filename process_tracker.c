@@ -10,10 +10,11 @@
 #include <stdbool.h>
 #include <ctype.h>
 
+
 struct file{
    char fd[20];
    char filename[512];
-   int inode;
+   long inode;
    struct file* nextfile;
 };
 
@@ -129,7 +130,6 @@ void getallpid(struct process** p){
 void printone(struct process* p, int n, char pid[]){
    struct process* root=p;
    struct file* f=NULL;
-   char string[1024];
    FILE *fp;
    int i=0;
    if(n==0){
@@ -144,17 +144,13 @@ void printone(struct process* p, int n, char pid[]){
    else if(n==3){
       printf("\tPID\tFD\tInode\tFilename\n");
    }
-   else if(n==4 || n==5){
-      if(n==4){
-         fp = fopen ("compositeTable.txt", "w");
-      }
-      else{
-         fp = fopen ("compositeTable.bin", "wb");
-      }
-      strcpy(string,"\tPID\tFD\tInode\tFilename\n\t==============================================\n");
-      fwrite(string,sizeof(char),strlen(string),fp);
-      memset(string, 0, 1024);   
+   else if(n==4){
+      fp = fopen ("compositeTable.txt", "w");
    }
+   else if(n==5){
+      fp = fopen ("compositeTable.bin", "wb");
+   }
+   
    else{
       return;
    }
@@ -176,15 +172,19 @@ void printone(struct process* p, int n, char pid[]){
          else if(n==1){
             printf("%d\t%s\t%s\t%s\n",i,root->pid,f->fd,f->filename);   }
          else if(n==2){
-            printf("%d\t%u\n",i,f->inode);
+            printf("%d\t%lu\n",i,f->inode);
          }
          else if(n==3){
-            printf("%d\t%s\t%s\t%u\t%s\n",i,root->pid,f->fd,f->inode,f->filename);
+            printf("%d\t%s\t%s\t%lu\t%s\n",i,root->pid,f->fd,f->inode,f->filename);
          }
-         else if(n==4||n==5){
-            sprintf(string,"%d\t%s\t%s\t%u\t%s\n",i,root->pid,f->fd,f->inode,f->filename);
-            fwrite(string,sizeof(char),strlen(string),fp);
-            memset(string, 0, 1024);
+         else if(n==4){
+            fprintf(fp,"%s %s %lu %s\n",root->pid,f->fd,f->inode,f->filename);
+         }
+         else if(n==5){
+            fwrite(root->pid,sizeof(char),strlen(root->pid),fp);
+            fwrite(f->fd,sizeof(char),strlen(f->fd),fp);
+            fwrite(&f->inode,sizeof(long),1,fp);
+            fwrite(f->filename,sizeof(char),strlen(f->filename),fp);
          }
          f=f->nextfile;
          i++;
