@@ -1,5 +1,5 @@
 CC=gcc
-CCFLAGS=-Wall -Werror -std=c99
+CCFLAGS=-Wall -Werror
 
 all: process_tracker.o getinfo.o
 	$(CC) $^ -o all
