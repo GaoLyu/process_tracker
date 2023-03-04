@@ -8,4 +8,4 @@ all: process_tracker.o getinfo.o
 
 .PHONY: clean
 clean:
-	rm -f *.o all
+	rm -f *.o all *.txt *.bin
