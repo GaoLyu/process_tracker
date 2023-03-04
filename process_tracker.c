@@ -5,6 +5,7 @@ void printone(struct process* p, int n, char pid[]){
    struct file* f=NULL;
    char string[1024];
    FILE *fp;
+   FILE *fp2;
    int i=0;
    if(n==0){
       printf("\tPID\tFD\n");
@@ -19,7 +20,7 @@ void printone(struct process* p, int n, char pid[]){
       printf("\tPID\tFD\tInode\tFilename\n");
    }
    else if(n==4){
-      fp = fopen ("compositeTable.txt", "w");
+      fp2 = fopen ("compositeTable.txt", "w");
    }
    else if(n==5){
       fp = fopen ("compositeTable.bin", "wb");
@@ -53,8 +54,8 @@ void printone(struct process* p, int n, char pid[]){
          }
          else if(n==4){
             sprintf(string,"%s %s %lu %s\n",root->pid,f->fd,f->inode,f->filename);
-            fputs(string,fp);
-            //fprintf(fp, "%s %s %lu %s\n",root->pid,f->fd,f->inode,f->filename);
+            fputs(string,fp2);
+            // fprintf(fp2, "%s",root->pid,f->fd,f->inode,f->filename);
          }
          else if(n==5){
             fwrite(root->pid,sizeof(char),strlen(root->pid),fp);
@@ -67,7 +68,10 @@ void printone(struct process* p, int n, char pid[]){
       }
       root=root->nextpid;
    }
-   if(n==4||n==5){
+   if(n==4){
+      fclose(fp2);
+   }
+   if(n==5){
       fclose(fp);
    }
 }
