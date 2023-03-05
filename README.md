@@ -31,3 +31,4 @@ An overview of the functions:
 
 How to run the program:
 	type "make" in the terminal, then type "./all" followed by the command line arguments
+	"make clean" removes .o, .txt, .bin files and all
