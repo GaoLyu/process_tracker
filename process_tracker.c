@@ -4,7 +4,7 @@
 void printone(struct process* p, int n, char pid[]){
    struct process* root=p;
    struct file* f=NULL;
-   char string[1024];
+   //char string[1024];
    FILE *fp1;
    FILE *fp2;
    int i=0;
@@ -54,9 +54,10 @@ void printone(struct process* p, int n, char pid[]){
             printf("%d\t%s\t%s\t%lu\t%s\n",i,root->pid,f->fd,f->inode,f->filename);
          }
          else if(n==4){
-            sprintf(string,"%s %s %lu %s\n",root->pid,f->fd,f->inode,f->filename);
-            fputs(string,fp1);
-            //fprintf(fp1, "%s %s %lu %s\n",root->pid,f->fd,f->inode,f->filename);
+            // sprintf(string,"%s %s %lu %s\n",root->pid,f->fd,f->inode,f->filename);
+            // fputs(string,fp1);
+            fprintf(fp1, "%s %s ",root->pid,f->fd);
+            fprintf(fp1,"%lu %s\n",f->inode,f->filename);
          }
          else if(n==5){
             fwrite(root->pid,sizeof(char),strlen(root->pid),fp2);
@@ -106,7 +107,7 @@ void printall(struct process* p,char pid[],
    printone(p,composite_flag,pid);
    printone(p,txt_flag,pid);
    printone(p,bin_flag,pid);
-   if(process_flag==-1 && system_flag==-1 && vnodes_flag==-1 && composite_flag==-1){
+   if(process_flag==-1 && system_flag==-1 && vnodes_flag==-1 && composite_flag==-1 && txt_flag==-1 && bin_flag==-1){
       printone(p,3,pid);
    }
    if(threshold!=-1 && threshold!=-2){
