@@ -1,10 +1,11 @@
 #include "getinfo.h"
 
+//Outputs process information as required by n and pid
 void printone(struct process* p, int n, char pid[]){
    struct process* root=p;
    struct file* f=NULL;
    char string[1024];
-   FILE *fp;
+   FILE *fp1;
    FILE *fp2;
    int i=0;
    if(n==0){
@@ -20,10 +21,10 @@ void printone(struct process* p, int n, char pid[]){
       printf("\tPID\tFD\tInode\tFilename\n");
    }
    else if(n==4){
-      fp2 = fopen ("compositeTable.txt", "w");
+      fp1 = fopen ("compositeTable.txt", "w");
    }
    else if(n==5){
-      fp = fopen ("compositeTable.bin", "wb");
+      fp2 = fopen ("compositeTable.bin", "wb");
    }
    
    else{
@@ -54,14 +55,14 @@ void printone(struct process* p, int n, char pid[]){
          }
          else if(n==4){
             sprintf(string,"%s %s %lu %s\n",root->pid,f->fd,f->inode,f->filename);
-            fputs(string,fp2);
-            // fprintf(fp2, "%s",root->pid,f->fd,f->inode,f->filename);
+            fputs(string,fp1);
+            //fprintf(fp1, "%s %s %lu %s\n",root->pid,f->fd,f->inode,f->filename);
          }
          else if(n==5){
-            fwrite(root->pid,sizeof(char),strlen(root->pid),fp);
-            fwrite(f->fd,sizeof(char),strlen(f->fd),fp);
-            fwrite(&f->inode,sizeof(long),1,fp);
-            fwrite(f->filename,sizeof(char),strlen(f->filename),fp);
+            fwrite(root->pid,sizeof(char),strlen(root->pid),fp2);
+            fwrite(f->fd,sizeof(char),strlen(f->fd),fp2);
+            fwrite(&f->inode,sizeof(long),1,fp2);
+            fwrite(f->filename,sizeof(char),strlen(f->filename),fp2);
          }
          f=f->nextfile;
          i++;
@@ -69,13 +70,14 @@ void printone(struct process* p, int n, char pid[]){
       root=root->nextpid;
    }
    if(n==4){
-      fclose(fp2);
+      fclose(fp1);
    }
    if(n==5){
-      fclose(fp);
+      fclose(fp2);
    }
 }
 
+//Prints information of threshold
 void printthreshold(struct process* p,int threshold){
    struct process* root=p;
    int position=0;
@@ -94,6 +96,7 @@ void printthreshold(struct process* p,int threshold){
    printf("\n");
 }
 
+//Outputs all information required by user
 void printall(struct process* p,char pid[],
    int process_flag,int system_flag,int vnodes_flag,
    int composite_flag,int txt_flag, int bin_flag, int threshold){
@@ -111,6 +114,7 @@ void printall(struct process* p,char pid[],
    }
 }
 
+//Gets command line arguments
 void get_command(int argc, char **argv, struct option long_options[], char pid[]){
    int c;
    int option_index;
