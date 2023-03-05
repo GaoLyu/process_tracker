@@ -70,10 +70,13 @@ void printone(struct process* p, int n, char pid[]){
       }
       root=root->nextpid;
    }
-   if(n==4){
+   if(n!=4 && n!=5){
+      printf("\t==============================================\n\n");
+   }
+   else if(n==4){
       fclose(fp1);
    }
-   if(n==5){
+   else if(n==5){
       fclose(fp2);
    }
 }
