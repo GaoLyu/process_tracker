@@ -18,7 +18,7 @@ void printone(struct process* p, int n, char pid[]){
       printf("\tInode\n");
    }
    else if(n==3){
-      printf("\tPID\tFD\tInode\tFilename\n");
+      printf("\tPID\tFD\tFilename\tInode\n");
    }
    else if(n==4){
       fp1 = fopen ("compositeTable.txt", "w");
@@ -43,7 +43,7 @@ void printone(struct process* p, int n, char pid[]){
    }
    while(root!=NULL){
       if(strcmp(pid,"")!=0){
-         if(strcmp(root->pid,pid)!=0){
+         if(root->pid!=atoi(pid)){
             root=root->nextpid;
             continue;
          }
@@ -51,27 +51,26 @@ void printone(struct process* p, int n, char pid[]){
       f=root->file; 
       while(f!=NULL){
          if(n==0){
-            printf("%d\t%s\t%s\n",i,root->pid,f->fd);
+            printf("%d\t%u\t%d\n",i,root->pid,f->fd);
          }
          else if(n==1){
-            printf("%d\t%s\t%s\t%s\n",i,root->pid,f->fd,f->filename);   }
+            printf("%d\t%u\t%d\t%s\n",i,root->pid,f->fd,f->filename);   }
          else if(n==2){
             printf("%d\t%lu\n",i,f->inode);
          }
          else if(n==3){
-            printf("%d\t%s\t%s\t%lu\t%s\n",i,root->pid,f->fd,f->inode,f->filename);
+            printf("%d\t%u\t%d\t%s\t%lu\n",i,root->pid,f->fd,f->filename, f->inode);
          }
          else if(n==4){
             // sprintf(string,"%s %s %lu %s\n",root->pid,f->fd,f->inode,f->filename);
             // fputs(string,fp1);
-            fprintf(fp1, "%s %s ",root->pid,f->fd);
-            fprintf(fp1,"%lu %s\n",f->inode,f->filename);
+            fprintf(fp1, "%u\t%d\t%s\t%lu\n",root->pid,f->fd,f->filename, f->inode);
          }
          else if(n==5){
-            fwrite(root->pid,sizeof(char),strlen(root->pid),fp2);
-            fwrite(f->fd,sizeof(char),strlen(f->fd),fp2);
-            fwrite(&f->inode,sizeof(long),1,fp2);
+            fwrite(&root->pid,sizeof(pid_t),1,fp2);
+            fwrite(&f->fd,sizeof(int),1,fp2);
             fwrite(f->filename,sizeof(char),strlen(f->filename),fp2);
+            fwrite(&f->inode,sizeof(long),1,fp2);
             //fwrite(&f,sizeof(struct file),1,fp2);
          }
          f=f->nextfile;
@@ -100,11 +99,11 @@ void printthreshold(struct process* p,int threshold){
    while(root!=NULL){
       if(root->num>threshold){
          if(position==0){
-            printf("%s (%d)",root->pid,root->num);
+            printf("%u (%d)",root->pid,root->num);
             position++;
          }
          else{
-            printf(", %s (%d)",root->pid,root->num);
+            printf(", %u (%d)",root->pid,root->num);
          }
       }
       root=root->nextpid;

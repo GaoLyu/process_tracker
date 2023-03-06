@@ -3,7 +3,7 @@
 
 struct file* createfile(char fd[], char filename[], int inode){
    struct file* file=malloc(sizeof(struct file));
-   strcpy(file->fd,fd);
+   file->fd=atoi(fd);
    strcpy(file->filename,filename);
    file->inode=inode;
    file->nextfile=NULL;
@@ -12,7 +12,7 @@ struct file* createfile(char fd[], char filename[], int inode){
 
 struct process* createprocess(char pid[], struct file* file, int i){
    struct process* process=malloc(sizeof(struct process));
-   strcpy(process->pid,pid);
+   process->pid=atoi(pid);
    process->file=file;
    process->nextpid=NULL;
    process->num=i;
