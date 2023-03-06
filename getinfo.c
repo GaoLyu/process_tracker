@@ -33,6 +33,7 @@ int getfd(char pid[], struct file **f){
    char location[100];
    char path[130];
    char filename[512];
+   memset(filename, 0, 512);
    struct stat st;
    strcpy(location, "/proc/");
    strcat(location,pid);

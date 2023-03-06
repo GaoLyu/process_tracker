@@ -15,14 +15,14 @@
 
 
 struct file{
-   char fd[20];
+   char fd[50];
    char filename[512];
    long inode;
    struct file* nextfile;
 };
 
 struct process{
-   char pid[20];
+   char pid[50];
    struct file* file;
    struct process* nextpid;
    int num;

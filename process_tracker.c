@@ -22,9 +22,17 @@ void printone(struct process* p, int n, char pid[]){
    }
    else if(n==4){
       fp1 = fopen ("compositeTable.txt", "w");
+      if(fp1==NULL){
+         perror("fopen\n");
+         exit(1);
+      }
    }
    else if(n==5){
       fp2 = fopen ("compositeTable.bin", "wb");
+      if(fp2==NULL){
+         perror("fopen\n");
+         exit(1);
+      }
    }
    
    else{
@@ -64,10 +72,14 @@ void printone(struct process* p, int n, char pid[]){
             fwrite(f->fd,sizeof(char),strlen(f->fd),fp2);
             fwrite(&f->inode,sizeof(long),1,fp2);
             fwrite(f->filename,sizeof(char),strlen(f->filename),fp2);
+            //fwrite(&f,sizeof(struct file),1,fp2);
          }
          f=f->nextfile;
          i++;
       }
+      // if(n==5){
+      //    fwrite(&root,sizeof(struct process),1,fp);
+      // }
       root=root->nextpid;
    }
    if(n!=4 && n!=5){

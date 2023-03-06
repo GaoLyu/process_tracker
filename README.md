@@ -32,3 +32,6 @@ An overview of the functions:
 How to run the program:
 	type "make" in the terminal, then type "./all" followed by the command line arguments
 	"make clean" removes .o, .txt, .bin files and all
+
+time difference:
+	It takes slightly more time to construct a binary file than an ascii text file. However, the 
