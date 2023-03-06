@@ -34,4 +34,6 @@ How to run the program:
 	"make clean" removes .o, .txt, .bin files and all
 
 time difference:
-	It takes slightly more time to construct a binary file than an ascii text file. However, the 
+	To compare running --output_TXT and --output_bin for all pid or single pid, I run 5 times for "time --output_TXT", "time --output_bin", "time --output_TXT [pid]", "time --output_bin [pid]", and calculate their average and standard deviation. The result is it takes slightly more time to construct a ASCII text file than a binary file and storing information of all pid takes more time than just storing one, which makes sense because text files are usually more expensive to read and write and because all pid requires more information to read. The standard deviation is small since I run these commands consecutively, thus there will not be a lot of change in terms of pid and their fd.
+	The file size for compositeTable.txt is greater than compositeTable.bin when storing the same thing.
+	Thus overall, constructing an ASCII text file is more expensive.
